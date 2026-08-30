@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Civic Shield",
+    "slug": "civic-shield",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#0b1220",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.civicshield.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0b1220"
+      },
+      "usesCleartextTraffic": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.civicshield.app"
+    }
+  }
+}
