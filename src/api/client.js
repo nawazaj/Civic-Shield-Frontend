@@ -28,6 +28,7 @@ export const getPropagationTimeline = (topic, limit = 20) => {
   params.set('limit', limit);
   return request(`${V1}/network/propagation-timeline?${params.toString()}`);
 };
+export const getProcessingStatus = () => request(`${V1}/analytics/status`);
 
 // ---- Ingestion triggers (writes) ----
 export const ingestMock = (count = 30) =>

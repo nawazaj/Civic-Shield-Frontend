@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Platform } from 'react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import {
-  ingestMock, ingestReddit, ingestTelegram, ingestX, ingestBatchLive, runPipeline,
+  ingestMock, ingestReddit, ingestTelegram, ingestX, ingestBatchLive,
+  getProcessingStatus,
 } from '../api/client';
 import { Panel } from '../components/Panel';
 import IngestActionCard from '../components/IngestActionCard';
 
 export default function IngestScreen() {
   const [log, setLog] = useState([]);
+  const [processing, setProcessing] = useState(null);
+
+  const refreshProcessing = () => {
+    getProcessingStatus().then(setProcessing).catch(() => {});
+  };
+
+  useEffect(() => {
+    refreshProcessing();
+    const interval = setInterval(refreshProcessing, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const pushLog = (label, ok, detail) => {
     setLog((l) => [{ ts: new Date().toLocaleTimeString(), label, ok, detail }, ...l].slice(0, 40));
@@ -32,8 +44,7 @@ export default function IngestScreen() {
         <Text className="text-low text-[10.5px] font-semibold tracking-widest uppercase">DATA SOURCES</Text>
         <Text className="text-hi text-3xl font-extrabold tracking-tight mt-1">Ingestion Controls</Text>
         <Text className="text-low text-[13px] mt-1 mb-4 leading-[18px]">
-          Trigger the backend's own ingestion endpoints directly. Nothing runs on a schedule —
-          data only enters the system when one of these is called.
+          Pull public signals from a source. New posts are analyzed automatically after each call.
         </Text>
       </Animated.View>
 
@@ -90,13 +101,25 @@ export default function IngestScreen() {
         delay={160}
       />
 
-      <IngestActionCard
-        title="Run Analytics Pipeline"
-        tag="PROCESS"
-        onRun={wrap('run-pipeline', () => runPipeline())}
-        note="Runs sentiment analysis + network-edge extraction on up to 50 unprocessed posts. Call repeatedly if you've ingested more than 50."
-        delay={200}
-      />
+      <Panel eyebrow="ANALYTICS STATUS" title="Processing" delay={200}>
+        {processing ? (
+          <View className="gap-1">
+            <Text className="text-mid text-[12.5px]">
+              <Text className="text-hi font-bold">{processing.processed_posts}</Text>
+              {' / '}{processing.total_posts} posts analyzed ·{' '}
+              <Text className={processing.pending_posts ? 'text-amber font-bold' : 'text-teal font-bold'}>
+                {processing.pending_posts ? `${processing.pending_posts} pending` : 'up to date'}
+              </Text>
+            </Text>
+            <Text className="text-low text-[11.5px]">
+              {processing.ai_provider === 'groq' ? `AI: ${processing.ai_model}` : 'AI fallback mode'}
+              {processing.last_processed_at ? ` · Updated ${new Date(processing.last_processed_at).toLocaleString()}` : ''}
+            </Text>
+          </View>
+        ) : (
+          <Text className="text-low text-[12.5px]">Checking processing status...</Text>
+        )}
+      </Panel>
 
       <Panel eyebrow="ACTIVITY LOG" title="Recent Calls" delay={240}>
         {log.length === 0 && <Text className="text-low text-[12.5px]">No actions run yet.</Text>}
